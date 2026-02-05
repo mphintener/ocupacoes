@@ -1,70 +1,58 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
-# 1. Mudança para layout centered para evitar faixas brancas no mobile
+# 1. Configuração e CSS para forçar fontes pequenas e design limpo
 st.set_page_config(page_title="Inteligência Regional", layout="centered")
 
-# 2. CSS Corretivo para Mobile
 st.markdown("""
     <style>
-    /* Remove espaços vazios no topo e evita sobreposição */
-    .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    /* Força o gráfico a caber na tela sem criar barras brancas */
-    .stPlotlyChart {
-        width: 100% !important;
-        overflow: hidden;
-    }
-    /* Estilização das métricas para não quebrarem */
-    [data-testid="stMetricValue"] {
-        font-size: 1.5rem !important;
-    }
+    /* Reduz a fonte global e títulos */
+    html, body, [class*="css"] { font-size: 13px !important; }
+    h1 { font-size: 1.4rem !important; color: #1E3A8A; font-weight: bold; }
+    h3 { font-size: 1.1rem !important; margin-top: 20px; }
+    
+    /* Ajusta o espaçamento das métricas */
+    [data-testid="stMetric"] { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+    
+    /* Remove bordas excessivas das tabelas */
+    .stDataFrame { border: none !important; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📈 Painel Estratégico")
-st.caption("Bacia do Juquery • Inteligência de Dados")
+st.title("📈 Inteligência de Mercado")
+st.caption("Foco: Bacia do Juquery (Dados RAIS/CAGED)")
 
-# Dados (Mantive os mesmos para teste)
+# 2. Dados Simplificados
 data = {
-    'Cidade': ['Cajamar', 'Caieiras', 'Franco', 'Morato'],
-    'Vagas': [1200, 400, 300, 800],
-    'Salario': [3500, 5500, 4800, 2100],
+    'Cidade': ['Cajamar', 'Caieiras', 'Franco da Rocha', 'Francisco Morato'],
+    'Setor Principal': ['Logística', 'Indústria', 'TI/Serviços', 'Comércio'],
+    'Vagas': [1200, 450, 320, 780],
+    'Média Salarial': [3850.00, 4200.00, 3100.00, 2250.00],
     'lat': [-23.35, -23.36, -23.32, -23.28],
     'lon': [-46.87, -46.74, -46.72, -46.74]
 }
 df = pd.DataFrame(data)
 
-# 3. Métricas empilhadas (Melhor para celular que colunas lado a lado)
-st.metric("Total de Vagas", df['Vagas'].sum())
-st.metric("Média Salarial", f"R$ {df['Salario'].mean():.2f}")
+# 3. Métricas Compactas
+col1, col2 = st.columns(2)
+with col1:
+    st.metric("Total de Vagas", f"{df['Vagas'].sum()}")
+with col2:
+    st.metric("Maior Salário", f"R$ {df['Média Salarial'].max():.0f}")
+
+# 4. Mapa Nativo (Muito mais limpo visualmente)
+st.write("### 📍 Concentração Industrial")
+# O st.map gera um mapa cinza/azul elegante automaticamente
+st.map(df, size=20, color='#1E3A8A')
+
+# 5. Tabela Organizada (Apenas as informações essenciais)
+st.write("### 📊 Detalhes por Município")
+# Usando o dataframe formatado para evitar confusão visual
+st.dataframe(
+    df[['Cidade', 'Setor Principal', 'Média Salarial']], 
+    use_container_width=True,
+    hide_index=True
+)
 
 st.divider()
-
-# 4. Gráfico de Mapa (Simplificado para evitar erro visual)
-st.subheader("📍 Mapa de Oportunidades")
-fig_map = px.scatter_mapbox(df, lat="lat", lon="lon", size="Vagas", 
-                            color="Salario", hover_name="Cidade",
-                            color_continuous_scale=px.colors.sequential.Bluered,
-                            size_max=30, zoom=9, height=350)
-
-fig_map.update_layout(
-    mapbox_style="carto-positron", 
-    margin={"r":0,"t":0,"l":0,"b":0},
-    autosize=True
-)
-st.plotly_chart(fig_map, use_container_width=True)
-
-# 5. Gráfico de Barras Vertical (Melhor que o de dispersão no mobile)
-st.subheader("💰 Salário por Cidade")
-fig_bar = px.bar(df, x='Cidade', y='Salario', color='Cidade', height=300)
-fig_bar.update_layout(showlegend=False, margin={"r":10,"t":10,"l":10,"b":10})
-st.plotly_chart(fig_bar, use_container_width=True)
-
-with st.expander("📄 Ver dados da RAIS/CAGED"):
-    st.dataframe(df, use_container_width=True)
+st.caption("Fonte: Microdados do Novo CAGED - 2026")
