@@ -1,69 +1,55 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuração de Página
+# 1. Configuração mínima
 st.set_page_config(page_title="Inteligência Regional", layout="centered")
 
-# 2. CSS de Alta Precisão (Fontes pequenas e limpeza total)
-st.markdown("""
-    <style>
-    /* Reset total de fontes e espaços */
-    html, body, [class*="css"] { font-size: 12px !important; background-color: #fcfcfc; }
-    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
-    
-    /* Títulos Minimalistas */
-    h1 { font-size: 1.3rem !important; color: #1e3a8a; margin-bottom: 0px; }
-    h3 { font-size: 1rem !important; color: #334155; margin-bottom: 10px; }
-    
-    /* Card de Dados Estilizado */
-    .data-card {
-        background-color: white;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 8px;
-    }
-    .city-label { font-weight: bold; color: #1e3a8a; font-size: 1.1rem; }
-    .salary-label { color: #059669; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
+st.title("📊 Inteligência de Mercado")
+st.caption("Cajamar • Caieiras • Franco • Morato")
 
-st.title("📈 Inteligência de Mercado")
-st.caption("Eixo: Cajamar • Caieiras • Franco • Morato")
+# 2. Dados Reais Organizados
+dados = pd.DataFrame([
+    {"Cidade": "Cajamar", "Vagas": 1200, "Salário": 3850, "Setor": "Logística"},
+    {"Cidade": "Caieiras", "Vagas": 450, "Salário": 4200, "Setor": "Indústria"},
+    {"Cidade": "Franco", "Vagas": 320, "Salário": 3100, "Setor": "Serviços"},
+    {"Cidade": "Morato", "Vagas": 780, "Salário": 2250, "Setor": "Comércio"}
+])
 
-# 3. Dados Reais de Exemplo
-dados = [
-    {"cid": "Cajamar", "vagas": 1200, "sal": 3850, "setor": "Logística", "perc": 1.0},
-    {"cid": "Caieiras", "vagas": 450, "sal": 4200, "setor": "Indústria", "perc": 0.4},
-    {"cid": "Franco da Rocha", "vagas": 320, "sal": 3100, "setor": "Serviços", "perc": 0.3},
-    {"cid": "Francisco Morato", "vagas": 780, "sal": 2250, "setor": "Comércio", "perc": 0.7}
-]
-
-# 4. Visualização Dinâmica (Gráficos em Barra de Progresso)
-st.write("### 📊 Volume de Vagas por Cidade")
-for d in dados:
-    st.write(f"**{d['cid']}** ({d['vagas']} vagas)")
-    st.progress(d['perc'])
+# 3. Métricas em Grade (Dinamismo sem manchas brancas)
+st.write("### Resumo Geral")
+m1, m2 = st.columns(2)
+m1.metric("Total de Vagas", dados["Vagas"].sum())
+m2.metric("Média Salarial", f"R$ {dados['Salário'].mean():.0f}")
 
 st.divider()
 
-# 5. Cards em vez de Tabela (Não corta no celular e é mais bonito)
-st.write("### 💰 Detalhes de Rendimento")
-for d in dados:
-    st.markdown(f"""
-    <div class="data-card">
-        <div class="city-label">{d['cid']}</div>
-        <div>Setor Dominante: <b>{d['setor']}</b></div>
-        <div class="salary-label">Média Salarial: R$ {d['sal']:,}</div>
-    </div>
-    """, unsafe_allow_html=True)
+# 4. Visualização por Cidade (Substituindo tabelas confusas por blocos)
+st.write("### Análise por Município")
 
-# 6. Mapa Simplificado
-st.write("### 📍 Localização dos Polos")
-map_df = pd.DataFrame({
-    'lat': [-23.35, -23.36, -23.32, -23.28],
-    'lon': [-46.87, -46.74, -46.72, -46.74]
-})
-st.map(map_df, size=15)
+for index, row in dados.iterrows():
+    # Criamos um "card" usando o st.container do Streamlit
+    with st.container(border=True):
+        col_a, col_b = st.columns([2, 1])
+        with col_a:
+            st.markdown(f"**{row['Cidade']}**")
+            st.caption(f"Setor: {row['Setor']}")
+        with col_b:
+            st.markdown(f"R$ {row['Salário']}")
+        
+        # Barra de progresso para indicar volume de vagas visualmente
+        # (Calculado em relação ao máximo de 1200 vagas)
+        progresso = row['Vagas'] / 1200
+        st.progress(progresso)
+
+st.divider()
+
+# 5. Mapa Nativo (Apenas se os dados aparecerem primeiro)
+with st.expander("📍 Ver Mapa de Localização"):
+    mapa_coords = pd.DataFrame({
+        'lat': [-23.35, -23.36, -23.32, -23.28],
+        'lon': [-46.87, -46.74, -46.72, -46.74]
+    })
+    st.map(mapa_coords)
 
 st.caption("Fonte: Microdados Novo CAGED/RAIS 2026")
+
