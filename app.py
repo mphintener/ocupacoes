@@ -1,70 +1,52 @@
 import streamlit as st
 import pandas as pd
-import pydeck as pdk
 
-st.set_page_config(page_title="Regional Ocupações", layout="centered")
-
-# CSS para garantir que o texto apareça
-st.markdown("<style>h1, h3 { color: #1E3A8A; } .stExpander { background-color: white; }</style>", unsafe_allow_html=True)
+# Configuração simples
+st.set_page_config(page_title="Regional Ocupações", page_icon="📍")
 
 st.title("📍 Inteligência Regional")
+st.markdown("Cajamar • Caieiras • Franco • Morato")
 
-# 1. DADOS DE ENSINO (Garantindo que apareçam)
-instituicoes = [
-    {"nome": "Fatec Franco da Rocha", "cid": "Franco da Rocha", "link": "https://www.fatecfrancodarocha.edu.br/"},
-    {"nome": "ETEC Francisco Morato", "cid": "Francisco Morato", "link": "https://www.cps.sp.gov.br/"},
-    {"nome": "Anhanguera Caieiras", "cid": "Caieiras", "link": "https://www.anhanguera.com/"},
-    {"nome": "Senai Cajamar", "cid": "Cajamar", "link": "https://cajamar.sp.senai.br/"}
-]
+# --- DADOS ---
+# Ocupações
+df_ocup = pd.DataFrame([
+    {"Cargo": "Analista de Logística", "Cidade": "Cajamar", "Salário": "R$ 4.200", "Nível": "Média"},
+    {"Cargo": "Desenvolvedor", "Cidade": "Cajamar", "Salário": "R$ 8.500", "Nível": "Alta"},
+    {"Cargo": "Técnico Industrial", "Cidade": "Caieiras", "Salário": "R$ 5.800", "Nível": "Alta"},
+    {"Cargo": "Enfermeiro", "Cidade": "Franco da Rocha", "Salário": "R$ 6.500", "Nível": "Alta"},
+    {"Cargo": "Comércio", "Cidade": "Francisco Morato", "Salário": "R$ 2.150", "Nível": "Baixa"}
+])
 
-# 2. DADOS DE OCUPAÇÕES
-ocupacoes = [
-    {"cargo": "Desenvolvedor", "cid": "Cajamar", "sal": "R$ 8.500", "comp": "Alta"},
-    {"cargo": "Logística", "cid": "Cajamar", "sal": "R$ 4.200", "comp": "Média"},
-    {"cargo": "Indústria", "cid": "Caieiras", "sal": "R$ 6.800", "comp": "Alta"},
-    {"cargo": "Varejo", "cid": "Morato", "sal": "R$ 2.150", "comp": "Baixa"}
-]
+# Instituições
+df_inst = pd.DataFrame([
+    {"Nome": "Fatec Franco da Rocha", "Cidade": "Franco da Rocha", "lat": -23.335, "lon": -46.722},
+    {"Nome": "ETEC Francisco Morato", "Cidade": "Francisco Morato", "lat": -23.289, "lon": -46.746},
+    {"Nome": "Anhanguera Caieiras", "Cidade": "Caieiras", "lat": -23.360, "lon": -46.744},
+    {"Nome": "Senai Cajamar", "Cidade": "Cajamar", "lat": -23.355, "lon": -46.877}
+])
 
-# --- NAVEGAÇÃO ---
-aba1, aba2 = st.tabs(["🔍 Ocupações e Ensino", "🔥 Mapa de Calor"])
+# --- INTERFACE ---
+aba1, aba2 = st.tabs(["🔍 Ocupações e Ensino", "📍 Localização"])
 
 with aba1:
-    st.subheader("Onde Trabalhar e Estudar")
-    # Filtro simples
-    filtro_cidade = st.selectbox("Escolha a Cidade", ["Todas", "Cajamar", "Caieiras", "Franco da Rocha", "Francisco Morato"])
+    st.subheader("Filtro por Município")
+    escolha = st.selectbox("Selecione:", ["Todas"] + list(df_ocup['Cidade'].unique()))
     
-    st.write("### 💼 Ocupações")
-    for o in ocupacoes:
-        if filtro_cidade == "Todas" or o['cid'] == filtro_cidade:
-            with st.expander(f"{o['cargo']} - {o['cid']}"):
-                st.write(f"**Salário:** {o['sal']} | **Nível:** {o['comp']}")
+    # Filtragem
+    vagas = df_ocup if escolha == "Todas" else df_ocup[df_ocup['Cidade'] == escolha]
+    ensino = df_inst if escolha == "Todas" else df_inst[df_inst['Cidade'] == escolha]
 
-    st.write("### 🏫 Instituições")
-    for i in instituicoes:
-        if filtro_cidade == "Todas" or i['cid'] == filtro_cidade:
-            st.markdown(f"**{i['nome']}** ({i['cid']})")
-            st.link_button("Ver Cursos", i['link'])
+    st.write("### 💼 Ocupações Encontradas")
+    for _, item in vagas.iterrows():
+        st.info(f"**{item['Cargo']}**\n\n{item['Cidade']} | {item['Salário']} ({item['Nível']})")
+
+    st.write("### 🏫 Onde Estudar")
+    for _, inst in ensino.iterrows():
+        st.success(f"**{inst['Nome']}**\n\nLocalizada em: {inst['Cidade']}")
 
 with aba2:
-    st.subheader("🔥 Mancha de Renda")
-    # Dados para o mapa (Lat/Lon reais da região)
-    mapa_df = pd.DataFrame({
-        'lat': [-23.33, -23.36, -23.35, -23.28],
-        'lon': [-46.72, -46.74, -46.87, -46.74],
-        'peso': [80, 60, 90, 30] # Intensidade do calor
-    })
-    
-    layer = pdk.Layer(
-        "HeatmapLayer",
-        mapa_df,
-        get_position='[lon, lat]',
-        get_weight='peso',
-        radius_pixels=50
-    )
-    
-    st.pydeck_chart(pdk.Deck(
-        layers=[layer],
-        initial_view_state=pdk.ViewState(latitude=-23.34, longitude=-46.76, zoom=10)
-    ))
+    st.subheader("Mapa de Instituições")
+    # O st.map é nativo e não causa erro de 'tela branca'
+    st.map(df_inst[['lat', 'lon']])
 
-st.caption("v3.0 - Dados Regionais Atualizados")
+st.caption("v3.1 - Estabilidade Total")
