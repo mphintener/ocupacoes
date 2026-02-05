@@ -1,45 +1,56 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página para um visual mais limpo
-st.set_page_config(page_title="App Ocupações", page_icon="💼")
+# Configuração de página
+st.set_page_config(page_title="Ocupações Regionais", page_icon="📍")
 
-st.title("💼 Ocupações: Inteligência Regional")
-st.markdown("---")
+# Título e Introdução
+st.title("📍 Ocupações: Cinturão Norte")
+st.markdown("Cajamar • Caieiras • Franco da Rocha • Francisco Morato")
 
-# 1. Abas para organizar o conteúdo (Fica ótimo no celular)
-tab1, tab2 = st.tabs(["🔍 Vagas e Setores", "📊 Análise Econômica"])
+# 1. Base de Dados Regional
+# Aqui simulamos os dados que você analisou do CAGED/PNADC
+data = {
+    'Cidade': ['Cajamar', 'Cajamar', 'Caieiras', 'Caieiras', 'Franco da Rocha', 'Franco da Rocha', 'Francisco Morato', 'Francisco Morato'],
+    'Setor': ['Logística Avançada', 'E-commerce', 'Ind. Papel/Celulose', 'Metalurgia', 'Serviços Médicos', 'Gestão Pública', 'Comércio Varejista', 'Construção Civil'],
+    'Complexidade': ['Média', 'Alta', 'Alta', 'Média', 'Alta', 'Média', 'Baixa', 'Baixa'],
+    'Salário': [3200, 7500, 6800, 4200, 8500, 5200, 2150, 2800]
+}
+df = pd.DataFrame(data)
+
+# 2. Filtro de Busca por Cidade (Interatividade)
+st.markdown("### 🔍 Filtrar por Cidade")
+cidade_selecionada = st.selectbox("Selecione o município:", ["Todas as Cidades"] + list(df['Cidade'].unique()))
+
+# Lógica de Filtro
+if cidade_selecionada != "Todas as Cidades":
+    df_filtrado = df[df['Cidade'] == cidade_selecionada]
+else:
+    df_filtrado = df
+
+# 3. Organização por Abas
+tab1, tab2 = st.tabs(["📋 Lista de Ocupações", "📊 Resumo por Complexidade"])
 
 with tab1:
-    st.subheader("Oportunidades em Destaque")
+    st.write(f"Exibindo resultados para: **{cidade_selecionada}**")
     
-    # Simulação de dados mais completa
-    dados = pd.DataFrame({
-        'Setor': ['Tecnologia', 'Farmacêutica', 'Logística', 'Indústria', 'Comércio'],
-        'Complexidade': ['💎 Alta', '💎 Alta', '📦 Baixa', '⚙️ Média', '📦 Baixa'],
-        'Salário': [8200, 7500, 2900, 4800, 2200],
-        'Empresas': ['Polo Industrial', 'Ind. Local', 'Centros Logísticos', 'Distrito Ind.', 'Centro']
-    })
-
-    # Usando Expansores para cada setor (Design muito moderno)
-    for index, row in dados.iterrows():
-        with st.expander(f"{row['Setor']} - {row['Salário']}"):
-            st.write(f"**Complexidade:** {row['Complexidade']}")
-            st.write(f"**Localização sugerida:** {row['Empresas']}")
-            st.button(f"Ver detalhes {row['Setor']}", key=index)
+    # Criando os "Cards" por complexidade
+    for _, row in df_filtrado.iterrows():
+        # Emoji por complexidade
+        cor = "💎" if row['Complexidade'] == 'Alta' else "⚙️" if row['Complexidade'] == 'Média' else "📦"
+        
+        with st.expander(f"{cor} {row['Setor']} - R$ {row['Salário']}"):
+            st.write(f"**Cidade:** {row['Cidade']}")
+            st.write(f"**Nível:** {row['Complexidade']} Complexidade")
+            st.caption("Fonte: Estimativa baseada em dados reais da região.")
 
 with tab2:
-    st.subheader("Indicadores de Caieiras e Franco")
-    
-    # Métricas com cores
-    c1, c2 = st.columns(2)
-    c1.metric("Média Salarial", "R$ 4.9k", "+5%")
-    c2.metric("Nível de Emprego", "Alto", "Estável")
-
-    # Gráfico nativo mas formatado
-    st.markdown("#### Potencial de Ganho por Setor")
-    st.bar_chart(dados.set_index('Setor')['Salário'])
+    st.subheader("Análise de Complexidade")
+    # Gráfico de barras que muda conforme a cidade escolhida
+    contagem = df_filtrado.groupby('Complexidade')['Salário'].mean().sort_values()
+    st.bar_chart(contagem)
+    st.info("O gráfico acima mostra o salário médio por nível de complexidade na seleção atual.")
 
 st.markdown("---")
-st.info("💡 **Dica Profissional:** Setores com '💎 Alta Complexidade' em nossa região apresentam os maiores crescimentos salariais nos últimos 24 meses.")
+st.caption("App Ocupações v2.0 - Foco em Desenvolvimento Regional")
 
