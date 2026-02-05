@@ -1,40 +1,44 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
-st.set_page_config(page_title="Ocupações Dinâmico", layout="wide")
+# Configuração de página
+st.set_page_config(page_title="Ocupações", layout="centered")
 
-st.title("🚀 Ocupações: Franco da Rocha & Caieiras")
-st.markdown("### Painel Dinâmico de Mercado e Qualificação")
+# CSS para encolher TUDO (Fontes e Espaços)
+st.markdown("""
+    <style>
+    /* Diminui o tamanho da fonte base */
+    html, body, [class*="css"] { font-size: 13px !important; }
+    /* Reduz o espaço no topo da página */
+    .block-container { padding-top: 1rem !important; padding-bottom: 0rem !important; }
+    /* Ajusta títulos */
+    h1 { font-size: 1.5rem !important; color: #2E86C1; }
+    h3 { font-size: 1.1rem !important; }
+    /* Estiliza o filtro para não ficar "gigante" */
+    .stSelectbox { margin-bottom: -15px; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# 1. Base de Dados (Pode ser substituída pelo seu CSV do GitHub)
+st.title("📍 Ocupações: Franco/Caieiras")
+
+# Dados de Exemplo (Depois conectamos seu CSV real)
 dados = pd.DataFrame({
-    'Setor': ['TI e Software', 'Ind. Farmacêutica', 'Logística', 'Metalurgia', 'Varejo', 'Construção'],
-    'Complexidade': ['Alta', 'Alta', 'Baixa', 'Média', 'Baixa', 'Média'],
-    'Salário Médio': [7800, 7200, 2900, 4500, 2150, 3800],
-    'Vagas Abertas': [12, 8, 45, 15, 60, 20]
+    'Setor': ['TI', 'Farmacêutica', 'Logística', 'Metalurgia', 'Varejo'],
+    'Complexidade': ['Alta', 'Alta', 'Baixa', 'Média', 'Baixa'],
+    'Salário': [7800, 7200, 2900, 4500, 2150]
 })
 
-# 2. Filtros na Barra Lateral
-st.sidebar.header("Filtre sua busca")
-setores_selecionados = st.sidebar.multiselect("Escolha os Setores", options=dados['Setor'].unique(), default=dados['Setor'].unique())
-df_filtrado = dados[dados['Setor'].isin(setores_selecionados)]
+# Filtro Único e Compacto
+setor_alvo = st.selectbox("Selecione o Setor:", ['Todos'] + list(dados['Setor'].unique()))
 
-# 3. Cartões de Métricas (Destaque)
-col1, col2, col3 = st.columns(3)
-col1.metric("Vagas Disponíveis", df_filtrado['Vagas Abertas'].sum())
-col2.metric("Média Salarial Regional", f"R$ {df_filtrado['Salário Médio'].mean():.2f}")
-col3.metric("Setor com mais Vagas", df_filtrado.loc[df_filtrado['Vagas Abertas'].idxmax(), 'Setor'])
+if setor_alvo != 'Todos':
+    df_exibir = dados[dados['Setor'] == setor_alvo]
+else:
+    df_exibir = dados
 
-# 4. Gráfico de Barras Interativo
-st.subheader("📊 Comparativo: Setor vs Salário")
-fig = px.bar(df_filtrado, x='Setor', y='Salário Médio', color='Complexidade',
-             title="Salário Médio por Setor e Nível de Complexidade",
-             color_discrete_map={'Alta': '#2ecc71', 'Média': '#f1c40f', 'Baixa': '#3498db'})
-st.plotly_chart(fig, use_container_width=True)
+# Exibição simplificada
+st.write("### Resumo de Ganhos")
+st.table(df_exibir) # .table ocupa menos espaço visual que .dataframe no mobile
 
-# 5. Tabela Detalhada
-st.subheader("📋 Detalhes das Ocupações")
-st.dataframe(df_filtrado, use_container_width=True)
+st.info("Setores de **Alta Complexidade** pagam melhor na região.")
 
-st.info("💡 **Dica:** Setores em VERDE (Alta Complexidade) exigem cursos técnicos ou superiores, mas pagam até 3x mais na região.")
