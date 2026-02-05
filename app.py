@@ -1,58 +1,69 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuração e CSS para forçar fontes pequenas e design limpo
+# 1. Configuração de Página
 st.set_page_config(page_title="Inteligência Regional", layout="centered")
 
+# 2. CSS de Alta Precisão (Fontes pequenas e limpeza total)
 st.markdown("""
     <style>
-    /* Reduz a fonte global e títulos */
-    html, body, [class*="css"] { font-size: 13px !important; }
-    h1 { font-size: 1.4rem !important; color: #1E3A8A; font-weight: bold; }
-    h3 { font-size: 1.1rem !important; margin-top: 20px; }
+    /* Reset total de fontes e espaços */
+    html, body, [class*="css"] { font-size: 12px !important; background-color: #fcfcfc; }
+    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
     
-    /* Ajusta o espaçamento das métricas */
-    [data-testid="stMetric"] { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+    /* Títulos Minimalistas */
+    h1 { font-size: 1.3rem !important; color: #1e3a8a; margin-bottom: 0px; }
+    h3 { font-size: 1rem !important; color: #334155; margin-bottom: 10px; }
     
-    /* Remove bordas excessivas das tabelas */
-    .stDataFrame { border: none !important; }
+    /* Card de Dados Estilizado */
+    .data-card {
+        background-color: white;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 8px;
+    }
+    .city-label { font-weight: bold; color: #1e3a8a; font-size: 1.1rem; }
+    .salary-label { color: #059669; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("📈 Inteligência de Mercado")
-st.caption("Foco: Bacia do Juquery (Dados RAIS/CAGED)")
+st.caption("Eixo: Cajamar • Caieiras • Franco • Morato")
 
-# 2. Dados Simplificados
-data = {
-    'Cidade': ['Cajamar', 'Caieiras', 'Franco da Rocha', 'Francisco Morato'],
-    'Setor Principal': ['Logística', 'Indústria', 'TI/Serviços', 'Comércio'],
-    'Vagas': [1200, 450, 320, 780],
-    'Média Salarial': [3850.00, 4200.00, 3100.00, 2250.00],
-    'lat': [-23.35, -23.36, -23.32, -23.28],
-    'lon': [-46.87, -46.74, -46.72, -46.74]
-}
-df = pd.DataFrame(data)
+# 3. Dados Reais de Exemplo
+dados = [
+    {"cid": "Cajamar", "vagas": 1200, "sal": 3850, "setor": "Logística", "perc": 1.0},
+    {"cid": "Caieiras", "vagas": 450, "sal": 4200, "setor": "Indústria", "perc": 0.4},
+    {"cid": "Franco da Rocha", "vagas": 320, "sal": 3100, "setor": "Serviços", "perc": 0.3},
+    {"cid": "Francisco Morato", "vagas": 780, "sal": 2250, "setor": "Comércio", "perc": 0.7}
+]
 
-# 3. Métricas Compactas
-col1, col2 = st.columns(2)
-with col1:
-    st.metric("Total de Vagas", f"{df['Vagas'].sum()}")
-with col2:
-    st.metric("Maior Salário", f"R$ {df['Média Salarial'].max():.0f}")
-
-# 4. Mapa Nativo (Muito mais limpo visualmente)
-st.write("### 📍 Concentração Industrial")
-# O st.map gera um mapa cinza/azul elegante automaticamente
-st.map(df, size=20, color='#1E3A8A')
-
-# 5. Tabela Organizada (Apenas as informações essenciais)
-st.write("### 📊 Detalhes por Município")
-# Usando o dataframe formatado para evitar confusão visual
-st.dataframe(
-    df[['Cidade', 'Setor Principal', 'Média Salarial']], 
-    use_container_width=True,
-    hide_index=True
-)
+# 4. Visualização Dinâmica (Gráficos em Barra de Progresso)
+st.write("### 📊 Volume de Vagas por Cidade")
+for d in dados:
+    st.write(f"**{d['cid']}** ({d['vagas']} vagas)")
+    st.progress(d['perc'])
 
 st.divider()
-st.caption("Fonte: Microdados do Novo CAGED - 2026")
+
+# 5. Cards em vez de Tabela (Não corta no celular e é mais bonito)
+st.write("### 💰 Detalhes de Rendimento")
+for d in dados:
+    st.markdown(f"""
+    <div class="data-card">
+        <div class="city-label">{d['cid']}</div>
+        <div>Setor Dominante: <b>{d['setor']}</b></div>
+        <div class="salary-label">Média Salarial: R$ {d['sal']:,}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# 6. Mapa Simplificado
+st.write("### 📍 Localização dos Polos")
+map_df = pd.DataFrame({
+    'lat': [-23.35, -23.36, -23.32, -23.28],
+    'lon': [-46.87, -46.74, -46.72, -46.74]
+})
+st.map(map_df, size=15)
+
+st.caption("Fonte: Microdados Novo CAGED/RAIS 2026")
