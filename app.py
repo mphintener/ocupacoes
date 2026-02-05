@@ -2,56 +2,69 @@ import streamlit as st
 import pandas as pd
 import pydeck as pdk
 
-st.set_page_config(page_title="Inteligência Regional", layout="wide")
+st.set_page_config(page_title="Regional Ocupações", layout="centered")
 
-st.title("📊 Painel Estratégico: Bacia do Juquery")
+# CSS para garantir que o texto apareça
+st.markdown("<style>h1, h3 { color: #1E3A8A; } .stExpander { background-color: white; }</style>", unsafe_allow_html=True)
 
-# 1. Simulação de Dados Reais (Onde estão as vagas de alta renda)
-# No futuro, este DataFrame será preenchido pelo seu CSV do CAGED
-data_map = pd.DataFrame({
-    'lat': [-23.33, -23.36, -23.35, -23.28, -23.32, -23.34],
-    'lon': [-46.72, -46.74, -46.87, -46.74, -46.73, -46.85],
-    'renda': [8000, 4500, 9000, 2500, 5000, 7000],
-    'vagas': [10, 50, 5, 100, 20, 15]
-})
+st.title("📍 Inteligência Regional")
 
-# 2. Mapa de Calor (Heatmap)
-st.subheader("🔥 Concentração de Renda e Ocupações")
-st.write("Manchas de calor baseadas no volume de salários por região (Cajamar e Caieiras em destaque).")
+# 1. DADOS DE ENSINO (Garantindo que apareçam)
+instituicoes = [
+    {"nome": "Fatec Franco da Rocha", "cid": "Franco da Rocha", "link": "https://www.fatecfrancodarocha.edu.br/"},
+    {"nome": "ETEC Francisco Morato", "cid": "Francisco Morato", "link": "https://www.cps.sp.gov.br/"},
+    {"nome": "Anhanguera Caieiras", "cid": "Caieiras", "link": "https://www.anhanguera.com/"},
+    {"nome": "Senai Cajamar", "cid": "Cajamar", "link": "https://cajamar.sp.senai.br/"}
+]
 
-layer = pdk.Layer(
-    "HeatmapLayer",
-    data_map,
-    get_position='[lon, lat]',
-    get_weight='renda',
-    radius_pixels=60,
-)
+# 2. DADOS DE OCUPAÇÕES
+ocupacoes = [
+    {"cargo": "Desenvolvedor", "cid": "Cajamar", "sal": "R$ 8.500", "comp": "Alta"},
+    {"cargo": "Logística", "cid": "Cajamar", "sal": "R$ 4.200", "comp": "Média"},
+    {"cargo": "Indústria", "cid": "Caieiras", "sal": "R$ 6.800", "comp": "Alta"},
+    {"cargo": "Varejo", "cid": "Morato", "sal": "R$ 2.150", "comp": "Baixa"}
+]
 
-view_state = pdk.ViewState(latitude=-23.34, longitude=-46.76, zoom=10, pitch=0)
+# --- NAVEGAÇÃO ---
+aba1, aba2 = st.tabs(["🔍 Ocupações e Ensino", "🔥 Mapa de Calor"])
 
-st.pydeck_chart(pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    tooltip={"text": "Concentração de Renda"}
-))
+with aba1:
+    st.subheader("Onde Trabalhar e Estudar")
+    # Filtro simples
+    filtro_cidade = st.selectbox("Escolha a Cidade", ["Todas", "Cajamar", "Caieiras", "Franco da Rocha", "Francisco Morato"])
+    
+    st.write("### 💼 Ocupações")
+    for o in ocupacoes:
+        if filtro_cidade == "Todas" or o['cid'] == filtro_cidade:
+            with st.expander(f"{o['cargo']} - {o['cid']}"):
+                st.write(f"**Salário:** {o['sal']} | **Nível:** {o['comp']}")
 
+    st.write("### 🏫 Instituições")
+    for i in instituicoes:
+        if filtro_cidade == "Todas" or i['cid'] == filtro_cidade:
+            st.markdown(f"**{i['nome']}** ({i['cid']})")
+            st.link_button("Ver Cursos", i['link'])
 
+with aba2:
+    st.subheader("🔥 Mancha de Renda")
+    # Dados para o mapa (Lat/Lon reais da região)
+    mapa_df = pd.DataFrame({
+        'lat': [-23.33, -23.36, -23.35, -23.28],
+        'lon': [-46.72, -46.74, -46.87, -46.74],
+        'peso': [80, 60, 90, 30] # Intensidade do calor
+    })
+    
+    layer = pdk.Layer(
+        "HeatmapLayer",
+        mapa_df,
+        get_position='[lon, lat]',
+        get_weight='peso',
+        radius_pixels=50
+    )
+    
+    st.pydeck_chart(pdk.Deck(
+        layers=[layer],
+        initial_view_state=pdk.ViewState(latitude=-23.34, longitude=-46.76, zoom=10)
+    ))
 
-# 3. Comparativo entre Cidades (Dados que você minerou)
-st.subheader("📈 Comparativo Socioeconômico")
-col1, col2 = st.columns(2)
-
-with col1:
-    st.write("**Salário Médio por Cidade**")
-    chart_data = pd.DataFrame({
-        'Cidade': ['Cajamar', 'Caieiras', 'Franco', 'Morato'],
-        'R$': [4200, 3800, 2900, 2100]
-    }).set_index('Cidade')
-    st.bar_chart(chart_data)
-
-with col2:
-    st.write("**Complexidade vs Qualificação**")
-    st.info("Cajamar e Caieiras lideram em ocupações de 'Alta Complexidade' devido aos pólos logísticos e industriais.")
-
-st.markdown("---")
-st.button("Baixar Relatório Completo (CSV)")
+st.caption("v3.0 - Dados Regionais Atualizados")
