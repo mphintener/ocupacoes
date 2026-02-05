@@ -41,4 +41,3 @@ st.write("### Resumo de Ganhos")
 st.table(df_exibir) # .table ocupa menos espaço visual que .dataframe no mobile
 
 st.info("Setores de **Alta Complexidade** pagam melhor na região.")
-
