@@ -1,26 +1,45 @@
 import streamlit as st
 import pandas as pd
 
-# Título simples
-st.title("📍 Ocupações: Regional")
-st.write("Análise de Salários e Complexidade")
+# Configuração da página para um visual mais limpo
+st.set_page_config(page_title="App Ocupações", page_icon="💼")
 
-# Dados organizados de forma direta
-df = pd.DataFrame({
-    'Setor': ['TI e Software', 'Ind. Farmacêutica', 'Metalurgia', 'Logística', 'Varejo'],
-    'Complexidade': ['Alta', 'Alta', 'Média', 'Baixa', 'Baixa'],
-    'Salário Médio': [7800, 7200, 4500, 2900, 2150]
-})
+st.title("💼 Ocupações: Inteligência Regional")
+st.markdown("---")
 
-# Exibindo os números principais primeiro
-st.subheader("Resumo Regional")
-st.metric("Média Salarial Geral", "R$ 4.890")
+# 1. Abas para organizar o conteúdo (Fica ótimo no celular)
+tab1, tab2 = st.tabs(["🔍 Vagas e Setores", "📊 Análise Econômica"])
 
-# Gráfico Nativo (Esse não deixa a tela branca)
-st.bar_chart(df.set_index('Setor')['Salário Médio'])
+with tab1:
+    st.subheader("Oportunidades em Destaque")
+    
+    # Simulação de dados mais completa
+    dados = pd.DataFrame({
+        'Setor': ['Tecnologia', 'Farmacêutica', 'Logística', 'Indústria', 'Comércio'],
+        'Complexidade': ['💎 Alta', '💎 Alta', '📦 Baixa', '⚙️ Média', '📦 Baixa'],
+        'Salário': [8200, 7500, 2900, 4800, 2200],
+        'Empresas': ['Polo Industrial', 'Ind. Local', 'Centros Logísticos', 'Distrito Ind.', 'Centro']
+    })
 
-# Tabela final
-st.subheader("Lista de Setores")
-st.dataframe(df)
+    # Usando Expansores para cada setor (Design muito moderno)
+    for index, row in dados.iterrows():
+        with st.expander(f"{row['Setor']} - {row['Salário']}"):
+            st.write(f"**Complexidade:** {row['Complexidade']}")
+            st.write(f"**Localização sugerida:** {row['Empresas']}")
+            st.button(f"Ver detalhes {row['Setor']}", key=index)
 
-st.caption("Dados focados em Caieiras e Franco da Rocha.")
+with tab2:
+    st.subheader("Indicadores de Caieiras e Franco")
+    
+    # Métricas com cores
+    c1, c2 = st.columns(2)
+    c1.metric("Média Salarial", "R$ 4.9k", "+5%")
+    c2.metric("Nível de Emprego", "Alto", "Estável")
+
+    # Gráfico nativo mas formatado
+    st.markdown("#### Potencial de Ganho por Setor")
+    st.bar_chart(dados.set_index('Setor')['Salário'])
+
+st.markdown("---")
+st.info("💡 **Dica Profissional:** Setores com '💎 Alta Complexidade' em nossa região apresentam os maiores crescimentos salariais nos últimos 24 meses.")
+
